@@ -1,0 +1,8 @@
+{
+  "name": "Remix Ads simulator",
+  "description": "An interactive ad simulation viewer and metrics tracking app featuring a helpful but witty AI assistant that occasionally teases you.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

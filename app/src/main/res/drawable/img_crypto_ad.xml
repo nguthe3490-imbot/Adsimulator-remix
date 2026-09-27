@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="120dp"
+    android:viewportWidth="200"
+    android:viewportHeight="120">
+
+    <!-- Dark gradient backing / cybernetic grid flavor -->
+    <path
+        android:fillColor="#0D091F"
+        android:pathData="M0,0h200v120h-200z" />
+
+    <!-- Grid Lines (Tech Vibe) -->
+    <path
+        android:strokeColor="#1E193C"
+        android:strokeWidth="1"
+        android:pathData="M 0,20 L 200,20 M 0,40 L 200,40 M 0,60 L 200,60 M 0,80 L 200,80 M 0,100 L 200,100" />
+    <path
+        android:strokeColor="#1E193C"
+        android:strokeWidth="1"
+        android:pathData="M 30,0 L 30,120 M 60,0 L 60,120 M 90,0 L 90,120 M 120,0 L 120,120 M 150,0 L 150,120 M 180,0 L 180,120" />
+
+    <!-- Glowing Background Aura -->
+    <path
+        android:fillColor="#22FFD700"
+        android:pathData="M100,60m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0" />
+
+    <!-- Golden Cyber Coin Outer Ring -->
+    <path
+        android:strokeColor="#FFD700"
+        android:strokeWidth="4"
+        android:fillColor="#261A00"
+        android:pathData="M100,60m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0" />
+
+    <!-- Coin Inner Ring -->
+    <path
+        android:strokeColor="#FF8C00"
+        android:strokeWidth="1.5"
+        android:pathData="M100,60m-24,0a24,24 0,1 1,48 0a24,24 0,1 1,-48 0" />
+
+    <!-- Blockchain Connection Tech Nodes/Traces -->
+    <path
+        android:strokeColor="#00FFCC"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M 60,60 L 45,60 M 140,60 L 155,60 M 100,20 L 100,30 M 100,100 L 100,90 Z" />
+    <path
+        android:fillColor="#00FFCC"
+        android:pathData="M43,60m-2.5,0a2.5,2.5 0,1 1,5 0a2.5,2.5 0,1 1,-5 0" />
+    <path
+        android:fillColor="#00FFCC"
+        android:pathData="M157,60m-2.5,0a2.5,2.5 0,1 1,5 0a2.5,2.5 0,1 1,-5 0" />
+
+    <!-- The Cyber Symbol (Modern Stylized "C" or Token mark with glowing look) -->
+    <path
+        android:strokeColor="#FFD700"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M 95,48 L 108,48 M 95,72 L 108,72 M 95,48 L 95,72" />
+    <path
+        android:strokeColor="#FFD700"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M 103,40 L 103,80" />
+
+    <!-- Circuit traces detailing inside coin -->
+    <path
+        android:strokeColor="#00FFCC"
+        android:strokeWidth="1"
+        android:pathData="M 108,48 L 115,55 L 115,65 L 108,72" />
+
+</vector>

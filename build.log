@@ -1,0 +1,16 @@
+Calculating task graph as no cached configuration is available for tasks: compileDebugKotlin
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:generateDebugBuildConfig
+> Task :app:processDebugNavigationResources
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :app:kspDebugKotlin
+
+> Task :app:compileDebugKotlin
+
+> Task :app:compileDebugKotlin FAILED
+8 actionable tasks: 4 executed, 4 up-to-date
+Configuration cache entry stored.
