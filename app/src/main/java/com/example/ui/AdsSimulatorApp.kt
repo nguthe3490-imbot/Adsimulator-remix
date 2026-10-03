@@ -59,9 +59,8 @@ import kotlinx.coroutines.delay
 fun AdsSimulatorApp(viewModel: AdsViewModel, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    var transitionText by remember { mutableStateOf("") }
-    var showTransitionScreen by remember { mutableStateOf(false) }
     var showUserGuideDialog by remember { mutableStateOf(false) }
+    var showResetConfirmDialog by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(0) } // 0: Live Viewer, 1: Metrics Simulator, 2: AdBot Chat
 
     // States from VM
@@ -93,14 +92,14 @@ fun AdsSimulatorApp(viewModel: AdsViewModel, modifier: Modifier = Modifier) {
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.PlayArrow,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
-                                .size(32.dp)
+                                .size(28.dp)
                                 .background(
                                     MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                                     CircleShape
@@ -109,8 +108,10 @@ fun AdsSimulatorApp(viewModel: AdsViewModel, modifier: Modifier = Modifier) {
                         )
                         Text(
                             text = "Ads Simulator",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 },
@@ -118,11 +119,11 @@ fun AdsSimulatorApp(viewModel: AdsViewModel, modifier: Modifier = Modifier) {
                     val soundVolume by viewModel.soundVolume.collectAsStateWithLifecycle()
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(end = 4.dp)
                     ) {
                         Text(
                             text = if (soundVolume == 0f) "🔇" else if (soundVolume < 0.4f) "🔈" else if (soundVolume < 0.7f) "🔉" else "🔊",
-                            fontSize = 18.sp,
+                            fontSize = 15.sp,
                             modifier = Modifier
                                 .clickable {
                                     if (soundVolume > 0f) {
@@ -131,93 +132,119 @@ fun AdsSimulatorApp(viewModel: AdsViewModel, modifier: Modifier = Modifier) {
                                         viewModel.setSoundVolume(0.5f)
                                     }
                                 }
-                                .padding(4.dp)
+                                .padding(2.dp)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(2.dp))
                         Slider(
                             value = soundVolume,
                             onValueChange = { viewModel.setSoundVolume(it) },
                             valueRange = 0f..1f,
-                            modifier = Modifier.width(70.dp).testTag("master_volume_slider"),
+                            modifier = Modifier.width(46.dp).testTag("master_volume_slider"),
                             colors = SliderDefaults.colors(
                                 thumbColor = MaterialTheme.colorScheme.primary,
                                 activeTrackColor = MaterialTheme.colorScheme.primary
                             )
                         )
                     }
-                    TextButton(
-                        onClick = {
-                            if (appLang == "vi") {
-                                viewModel.setAppLanguage("en")
-                            } else {
-                                viewModel.setAppLanguage("vi")
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)),
+                        modifier = Modifier
+                            .padding(end = 4.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable {
+                                if (appLang == "vi") {
+                                    viewModel.setAppLanguage("en")
+                                } else {
+                                    viewModel.setAppLanguage("vi")
+                                }
                             }
-                        },
-                        modifier = Modifier.testTag("language_switch_button")
+                            .testTag("language_switch_button")
                     ) {
-                        Text(
-                            text = if (appLang == "vi") "🇻🇳 VI" else "🇬🇧 EN",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp),
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 5.dp)
+                        ) {
+                            Text(
+                                text = if (appLang == "vi") "🇻🇳" else "🇬🇧",
+                                fontSize = 13.sp
+                            )
+                            Text(
+                                text = if (appLang == "vi") "VI" else "EN",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
-                    TextButton(
-                        onClick = {
-                            val nextStyle = when (dashboardStyle) {
-                                "dark_moody" -> "professional"
-                                "professional" -> "gray_minimal"
-                                else -> "dark_moody"
-                            }
-                            val modeName = when (nextStyle) {
-                                "professional" -> viewModel.t("HIỆU ỨNG AGENCY MODE", "AGENCY MODE EFFECT")
-                                "gray_minimal" -> viewModel.t("MÀN HÌNH XÁM CHỮ TRẮNG (GRAY MODE)", "GRAY SCREEN WHITE TEXT EFFECT")
-                                else -> viewModel.t("HIỆU ỨNG STARTUP MODE", "STARTUP MODE EFFECT")
-                            }
-                            transitionText = modeName
-                            showTransitionScreen = true
-                            coroutineScope.launch {
-                                delay(1200)
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+                        modifier = Modifier
+                            .padding(end = 2.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable {
+                                val nextStyle = when (dashboardStyle) {
+                                    "dark_moody" -> "professional"
+                                    "professional" -> "gray_minimal"
+                                    else -> "dark_moody"
+                                }
                                 viewModel.setDashboardStyle(nextStyle)
-                                delay(300)
-                                showTransitionScreen = false
                             }
-                        },
-                        modifier = Modifier.testTag("dashboard_style_toggle_button")
+                            .testTag("dashboard_style_toggle_button")
                     ) {
-                        Text(
-                            text = when (dashboardStyle) {
-                                "professional" -> "👔 Agency"
-                                "gray_minimal" -> "🌫️ Gray Mode"
-                                else -> "🚀 Startup"
-                            },
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp),
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 5.dp)
+                        ) {
+                            Text(
+                                text = when (dashboardStyle) {
+                                    "professional" -> "👔"
+                                    "gray_minimal" -> "🌫️"
+                                    else -> "🚀"
+                                },
+                                fontSize = 13.sp
+                            )
+                            Text(
+                                text = when (dashboardStyle) {
+                                    "professional" -> "Agency"
+                                    "gray_minimal" -> "Gray"
+                                    else -> "Startup"
+                                },
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                     IconButton(
                         onClick = { showUserGuideDialog = true },
                         modifier = Modifier
+                            .size(34.dp)
                             .testTag("user_guide_button")
-                            .minimumInteractiveComponentSize()
                     ) {
                         Icon(
                             imageVector = Icons.Default.Info,
                             contentDescription = viewModel.t("Hướng dẫn sử dụng", "User Guide"),
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(19.dp)
                         )
                     }
                     IconButton(
-                        onClick = { viewModel.clearAllHistory() },
+                        onClick = { showResetConfirmDialog = true },
                         modifier = Modifier
+                            .size(34.dp)
                             .testTag("reset_button")
-                            .minimumInteractiveComponentSize()
                     ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = viewModel.t("Reset dữ liệu", "Reset data"),
-                            tint = MaterialTheme.colorScheme.error
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(19.dp)
                         )
                     }
                 },
@@ -270,13 +297,14 @@ fun AdsSimulatorApp(viewModel: AdsViewModel, modifier: Modifier = Modifier) {
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 // Interactive Mini AdBot dialogue card for immediate status reactions!
-                if (selectedTab != 3) {
+                if (selectedTab == 0) {
                     AdBotTopBanner(text = translateAdBotDialogue(adBotDialogue, isEn), isThinking = isAIBusy, isEn = isEn)
                 }
 
                 // Main Tab Display
                 AnimatedContent(
                     targetState = selectedTab,
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
                     transitionSpec = {
                         fadeIn(animationSpec = spring()) togetherWith fadeOut(animationSpec = spring())
                     },
@@ -370,51 +398,41 @@ fun AdsSimulatorApp(viewModel: AdsViewModel, modifier: Modifier = Modifier) {
                 )
             }
 
-            // Grey screen with white letters transition overlay (Startup and Agency style transition)
-            if (showTransitionScreen) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0xFF2C2C2C)) // Premium Dark Grey
-                        .clickable(enabled = false) {}, // Intercept touch events
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                        modifier = Modifier.padding(24.dp)
-                    ) {
+            // Reset Confirmation Dialog
+            if (showResetConfirmDialog) {
+                AlertDialog(
+                    onDismissRequest = { showResetConfirmDialog = false },
+                    title = {
                         Text(
-                            text = "⚡ SYSTEM INITIALIZING...",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color.LightGray.copy(alpha = 0.6f),
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.5.sp
+                            text = viewModel.t("Xác nhận đặt lại", "Confirm Reset"),
+                            fontWeight = FontWeight.Bold
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                    },
+                    text = {
                         Text(
-                            text = transitionText,
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = Color.White,
-                            fontWeight = FontWeight.ExtraBold,
-                            textAlign = TextAlign.Center,
-                            letterSpacing = 2.sp
+                            text = viewModel.t(
+                                "Bạn có chắc muốn đặt lại toàn bộ điểm số, lượt xem, doanh thu và lịch sử mô phỏng về trạng thái ban đầu?",
+                                "Are you sure you want to reset all scores, impressions, revenue, and simulation history back to zero?"
+                            )
                         )
-                        Spacer(modifier = Modifier.height(24.dp))
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            strokeWidth = 3.dp,
-                            modifier = Modifier.size(36.dp)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = viewModel.t("Đang áp dụng cấu hình giao diện...", "Applying theme configuration..."),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.LightGray.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center
-                        )
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                viewModel.clearAllHistory()
+                                showResetConfirmDialog = false
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Text(viewModel.t("Đặt lại ngay", "Reset Now"))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showResetConfirmDialog = false }) {
+                            Text(viewModel.t("Hủy", "Cancel"))
+                        }
                     }
-                }
+                )
             }
         }
     }
@@ -1085,11 +1103,6 @@ fun SimulatorScreen(
             }
         }
 
-        // Interactive Sarcastic AdBot Metrics Analyst Chat
-        item {
-            MetricsChatComponent(viewModel = viewModel)
-        }
-
         // Simulation parameters controller
         item {
             Card(
@@ -1417,6 +1430,11 @@ fun SimulatorScreen(
             }
         }
 
+        // Interactive Sarcastic AdBot Metrics Analyst Chat (Collapsible & Compact)
+        item {
+            MetricsChatComponent(viewModel = viewModel)
+        }
+
         // Metrics History Table Logs
         item {
             Text(
@@ -1664,6 +1682,7 @@ fun MetricsChatComponent(viewModel: AdsViewModel) {
     val appLang by viewModel.appLanguage.collectAsStateWithLifecycle()
     val isEn = appLang == "en"
 
+    var isExpanded by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
     // Scroll to bottom when history updates
@@ -1674,24 +1693,31 @@ fun MetricsChatComponent(viewModel: AdsViewModel) {
     }
 
     Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
         modifier = Modifier
             .fillMaxWidth()
             .testTag("metrics_roaster_card")
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            // Header Row (Clickable to toggle expand/collapse)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { isExpanded = !isExpanded }
+                    .padding(vertical = 4.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
@@ -1700,202 +1726,258 @@ fun MetricsChatComponent(viewModel: AdsViewModel) {
                             imageVector = Icons.Default.Face,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Column {
-                        Text(
-                            text = viewModel.t("AdBot Phân Tích Cà Khịa 📊", "AdBot Sarcastic Analyst 📊"),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = viewModel.t("Hỏi hoặc click mẫu để nghe AdBot 'sấy' số liệu", "Ask or click templates to hear AdBot roast your stats"),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                // Clear chat history button
-                IconButton(
-                    onClick = { viewModel.clearMetricsChat() },
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Clear Chat",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Chat area (bounded height)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
-                    .padding(10.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(scrollState),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    chatHistory.forEach { chat ->
-                        AdBotChatBubble(
-                            message = chat.message,
-                            isBot = chat.sender == "adbot"
-                        )
-                    }
-
-                    if (isBusy) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.Start
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primaryContainer)
-                                    .align(Alignment.Bottom),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Face,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            Card(
-                                shape = RoundedCornerShape(
-                                    topStart = 16.dp,
-                                    topEnd = 16.dp,
-                                    bottomStart = 2.dp,
-                                    bottomEnd = 16.dp
-                                ),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                                ),
-                                modifier = Modifier.widthIn(max = 280.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            Text(
+                                text = viewModel.t("AdBot Phân Tích Cà Khịa 📊", "AdBot Sarcastic Analyst 📊"),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            if (chatHistory.isNotEmpty()) {
+                                Surface(
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                    shape = RoundedCornerShape(8.dp)
                                 ) {
-                                    TypingIndicator(dotColor = MaterialTheme.colorScheme.primary)
                                     Text(
-                                        text = viewModel.t("AdBot đang soi số liệu...", "AdBot is auditing your stats..."),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        text = "${chatHistory.size}",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
                                     )
                                 }
                             }
                         }
+                        Text(
+                            text = if (isExpanded) {
+                                viewModel.t("Hỏi hoặc click mẫu để nghe AdBot 'sấy' số liệu", "Ask or tap templates to roast your stats")
+                            } else {
+                                viewModel.t("Nhấn để mở rộng trò chuyện với AdBot...", "Tap to open AdBot roaster chat...")
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Suggestion chips
-            val suggestionChips = listOf(
-                viewModel.t("Cà khịa CTR của tôi đi! 🎯", "Roast my CTR! 🎯"),
-                viewModel.t("Phân tích doanh thu bèo bọt này 💸", "Analyze this tragic revenue 💸"),
-                viewModel.t("Tại sao không ai click ads của tôi? 🤦‍♂️", "Why is nobody clicking my ads? 🤦‍♂️"),
-                viewModel.t("Chạy ngách này có sạt nghiệp không? 💣", "Will I go bankrupt with this niche? 💣")
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                suggestionChips.forEach { chipText ->
-                    Surface(
-                        onClick = { viewModel.sendMetricsMessage(chipText) },
-                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f),
-                        shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isExpanded) {
+                        IconButton(
+                            onClick = { viewModel.clearMetricsChat() },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Clear Chat",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                    IconButton(
+                        onClick = { isExpanded = !isExpanded },
+                        modifier = Modifier.size(28.dp)
                     ) {
-                        Text(
-                            text = chipText,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                        Icon(
+                            imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = if (isExpanded) "Collapse" else "Expand",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            // Expanded Chat Section
+            AnimatedVisibility(visible = isExpanded) {
+                Column(modifier = Modifier.padding(top = 6.dp)) {
+                    // Chat area (compact bounded height: 130dp)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(130.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
+                            .padding(8.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(scrollState),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            if (chatHistory.isEmpty()) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = viewModel.t("Chưa có tin nhắn. Chạm một gợi ý bên dưới để thử!", "No messages yet. Tap a suggestion below!"),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
 
-            // Chat text input row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = inputText,
-                    onValueChange = { viewModel.setMetricsInputText(it) },
-                    placeholder = {
-                        Text(
-                            text = viewModel.t("Hỏi AdBot về số liệu của bạn...", "Ask AdBot about your metrics..."),
-                            fontSize = 13.sp
-                        )
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 46.dp)
-                        .testTag("metrics_chat_input"),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
-                    ),
-                    textStyle = MaterialTheme.typography.bodyMedium,
-                    maxLines = 2,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                    keyboardActions = KeyboardActions(onSend = { viewModel.sendMetricsMessage() })
-                )
+                            chatHistory.forEach { chat ->
+                                AdBotChatBubble(
+                                    message = chat.message,
+                                    isBot = chat.sender == "adbot"
+                                )
+                            }
 
-                IconButton(
-                    onClick = { viewModel.sendMetricsMessage() },
-                    enabled = inputText.trim().isNotEmpty() && !isBusy,
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (inputText.trim().isNotEmpty()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-                        )
-                        .testTag("metrics_chat_send_button")
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "Send",
-                        tint = if (inputText.trim().isNotEmpty()) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp)
+                            if (isBusy) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 2.dp),
+                                    horizontalArrangement = Arrangement.Start
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.primaryContainer)
+                                            .align(Alignment.Bottom),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Face,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp),
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(6.dp))
+
+                                    Card(
+                                        shape = RoundedCornerShape(
+                                            topStart = 14.dp,
+                                            topEnd = 14.dp,
+                                            bottomStart = 2.dp,
+                                            bottomEnd = 14.dp
+                                        ),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                        ),
+                                        modifier = Modifier.widthIn(max = 240.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            TypingIndicator(dotColor = MaterialTheme.colorScheme.primary)
+                                            Text(
+                                                text = viewModel.t("AdBot đang soi số liệu...", "AdBot is auditing your stats..."),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Suggestion chips
+                    val suggestionChips = listOf(
+                        viewModel.t("Cà khịa CTR! 🎯", "Roast my CTR! 🎯"),
+                        viewModel.t("Doanh thu bèo bọt 💸", "Tragic revenue 💸"),
+                        viewModel.t("Sao không ai click? 🤦‍♂️", "Why no clicks? 🤦‍♂️"),
+                        viewModel.t("Có sạt nghiệp không? 💣", "Will I go broke? 💣")
                     )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        suggestionChips.forEach { chipText ->
+                            Surface(
+                                onClick = { viewModel.sendMetricsMessage(chipText) },
+                                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                            ) {
+                                Text(
+                                    text = chipText,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Chat text input row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = inputText,
+                            onValueChange = { viewModel.setMetricsInputText(it) },
+                            placeholder = {
+                                Text(
+                                    text = viewModel.t("Hỏi AdBot về số liệu...", "Ask AdBot about stats..."),
+                                    fontSize = 12.sp
+                                )
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 40.dp)
+                                .testTag("metrics_chat_input"),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                            ),
+                            textStyle = MaterialTheme.typography.bodyMedium,
+                            maxLines = 2,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                            keyboardActions = KeyboardActions(onSend = { viewModel.sendMetricsMessage() })
+                        )
+
+                        IconButton(
+                            onClick = { viewModel.sendMetricsMessage() },
+                            enabled = inputText.trim().isNotEmpty() && !isBusy,
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (inputText.trim().isNotEmpty()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                                )
+                                .testTag("metrics_chat_send_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Send,
+                                contentDescription = "Send",
+                                tint = if (inputText.trim().isNotEmpty()) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -1906,54 +1988,54 @@ fun MetricsChatComponent(viewModel: AdsViewModel) {
 
 @Composable
 fun AdBotTopBanner(text: String, isThinking: Boolean, isEn: Boolean) {
+    var isCollapsed by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 6.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(14.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.Top
+                .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
-            // Bot Avatar
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Face,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Face,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                     Text(
-                        text = if (isEn) "AdBot Sassy Assistant" else "AdBot Trợ lý đanh đá",
+                        text = if (isEn) "AdBot Assistant" else "AdBot Trợ lý",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    
                     if (isThinking) {
                         Text(
-                            text = if (isEn) "Mocking..." else "Đang cà kịa...",
+                            text = if (isEn) "Mocking..." else "Đang phản hồi...",
                             fontSize = 10.sp,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -1967,14 +2049,31 @@ fun AdBotTopBanner(text: String, isThinking: Boolean, isEn: Boolean) {
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(4.dp))
-                
-                Text(
-                    text = text,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 20.sp
-                )
+                IconButton(
+                    onClick = { isCollapsed = !isCollapsed },
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isCollapsed) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
+                        contentDescription = if (isCollapsed) "Expand" else "Collapse",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            AnimatedVisibility(visible = !isCollapsed) {
+                Column {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = text,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 18.sp,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }
